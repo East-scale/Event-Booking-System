@@ -2,27 +2,53 @@
 
 namespace App\Http\Controllers;
 
+//Import the models for interacting with the Event and Bookings tables
 use App\Models\Event;
+use App\Models\Category; //Category feature: Import model for filtering 
 use App\Models\Booking;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
+use Illuminate\Http\Request; //Request class for handling HTTP requests
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; //required for raw database queries
+
+//EventController handles the CRUD operations for events and dashboard functionality
 class EventController extends Controller
-{
-    //Show method
+{    
+    
+    /**
+    * Display a listing of all events for public browsing
+    */
+    public function index()
+    {
+    // Get all events for attendees to browse and book
+    $events = Event::with(['organiser', 'categories'])
+        ->orderBy('event_date', 'asc')
+        ->simplePaginate(8);
+    
+    // Add the variables that home.blade.php expects
+    $categories = Category::where('is_active', true)->orderBy('name')->get();
+    $selectedCategory = null;
+        
+    return view('home', compact('events', 'categories', 'selectedCategory'));
+    }
+
+    //Show the details of a specific event
     public function show(Event $event)
     {
-        $userBooking = null;
+        $userBooking = null; //initialise userbooking as null if a user has not booked anything
         
         // Check if current user has already booked this event
         if (auth()->check()) {
-            $userBooking = Booking::where('organiser_id', auth()->id())
+            $userBooking = Booking::where('user_id', auth()->id())
                                 ->where('event_id', $event->id)
                                 ->first();
         }
+
+        // Check if the event is Full
+        $currentBookings = Booking::where('event_id', $event->id)->count();
+        $isEventFull = $currentBookings >= $event->capacity;
         
-        return view('events.show', compact('event', 'userBooking'));
+        return view('events.show', compact('event', 'userBooking', 'currentBookings', 'isEventFull'));
     }
 
     // below is the methods for each crud functionality
@@ -33,7 +59,9 @@ class EventController extends Controller
             return redirect()->route('home')->with('error', 'Only organisers may create events');
         }
 
-        return view('events.create');
+        // Get all the active categories for the create form
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        return view('events.create', compact('categories')); //Pass categories to view
     }
     
     // Store a new event
@@ -41,7 +69,7 @@ class EventController extends Controller
     {
         //Check if user is an organiser
         if (auth()->user()->user_type !== 'organiser'){
-            return redirect()->route('home')->with('error', 'Only organisers may create events');
+            return redirect()->route('home')->with('error', 'Only organisers are able to create events');
         }
 
         // Validation rules, using validate
@@ -52,7 +80,12 @@ class EventController extends Controller
             'event_date' => 'required|date|after:today',
             'event_time' => 'required|date_format:H:i',
             'location' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1|max:1000'
+            'capacity' => 'required|integer|min:1|max:1000',
+
+            // category features
+            'categories' => 'array', //categories must be in arrays,
+            'categories.*' => 'exists:categories,id' // Each category ID must exist in the category table
+
         ]);
 
         // Create the event, pass validated values into the event array
@@ -63,8 +96,13 @@ class EventController extends Controller
             'event_date' => $validated['event_date'],
             'event_time' => $validated['event_time'],
             'location' => $validated['location'],
-            'capacity' => $validated['capacity']
+            'capacity' => $validated['capacity']    
         ]);
+
+        //Event category feature:, attach selected categories to the event, which create records in the event_category pivot table
+        if ($request->has('categories')) {
+            $event->categories()->attach($request->categories);
+        }
 
         return redirect()->route('events.show', $event)->with('success', 'Event created successfully!');
     }
@@ -77,7 +115,12 @@ class EventController extends Controller
             return redirect()->route('events.show', $event)->with('error', 'You can only edit your own events.');
         }
 
-        return view('events.edit', compact('event'));
+        //Get all active categories for the edit form
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        //Get the currently selected category IDs for the event
+        $selectedCategories = $event->categories->pluck('id')->toArray();
+
+        return view('events.edit', compact('event', 'categories', 'selectedCategories'));
     }
 
     // Update event
@@ -88,19 +131,33 @@ class EventController extends Controller
             return redirect()->route('events.show', $event)->with('error', 'only the owner can update event details.');
         }
 
-        // Validation is required here
+        // Validation rules for each of part of the incoming request data
         $validated = $request->validate([
             'title' => 'required|string|max:100',
             'description' => 'nullable|string|max:1000',
             'event_date' => 'required|date|after:today',
             'event_time' => 'required|date_format:H:i',
             'location' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1|max:1000'
+            'capacity' => 'required|integer|min:1|max:1000',
+            // Category Feature : Also need to validate the categories
+            'categories' => 'array', 
+            'categories.*' => 'exists:categories,id'   
         ]);
 
         // Update the event
-        $event->update($validated);
+        $event->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'event_date' => $validated['event_date'],
+            'event_time' => $validated['event_time'],
+            'location' => $validated['location'],
+            'capacity' => $validated['capacity']
+        ]);
 
+        // CATEGORY FEATURE: Sync categories with the event
+        // sync() removes all existing category relationships and adds the new ones
+        // Using the ?? [] ensures empty array if no categories are selected, and also would remove all categories
+        $event->categories()->sync($request->categories ?? []);
         return redirect()->route('events.show', $event)->with('success', 'Event updated successfully!');
 
     }
@@ -117,26 +174,21 @@ class EventController extends Controller
         $bookingCount = Booking::where('event_id', $event->id)->count();
         if ($bookingCount > 0) {
             return redirect()->route('events.show', $event)->with('error', 'Cannot delete event with existing bookings.');
-        }
-
-        
-        $eventTitle = $event->title; // Retrieve and store event title before deletion for the deletion message
-       
+        }       
+        $eventTitle = $event->title; // Retrieve and store event title before deletion for the deletion message      
         $event->delete(); // delete event
-
         return redirect()->route('home')->with('success', "Event '$eventTitle' deleted successfully!");
     }
 
     public function dashboard()
     {
-    // Ensure only authenticated users can access the dashboard
-    if (!auth()->check()) {
-        return redirect()->route('login');
-    }
+    // Middleware handles the authentication check
+    $user = Auth::user();
 
-
-    // Raw SQL query using DB::select() with parameter binding, LEFT JOIN is to ensure that events with zero bookings 
-    // are also included. 
+        if ($user->user_type === 'organiser') {
+    // Raw SQL query for the organiser dashboar using DB::select() with parameter binding, 
+    // LEFT JOIN is to ensure that events with zero bookings are also included 
+    // Separate logic for organisers and attendees
     $events = DB::select("
         SELECT 
             e.id,
@@ -150,10 +202,30 @@ class EventController extends Controller
         WHERE e.organiser_id = ?
         GROUP BY e.id, e.title, e.event_date, e.capacity
         ORDER BY e.event_date ASC
-    ", [auth()->id()]);
+    ", [$user->id]);
+    } else {
+        // Attendees see upcoming events
+        $events = DB::select("
+        SELECT
+            e.id,
+            e.title,
+            e.event_date,
+            e.capacity,
+            COALESCE(COUNT(b.id), 0) as current_bookings,
+            (e.capacity - COALESCE(COUNT(b.id), 0)) as remaining_spots
+        FROM events e
+        LEFT JOIN bookings b ON e.id = b.event_id
+        WHERE e.event_date >= ?
+        GROUP BY e.id, e.title, e.event_date, e.capacity
+        ORDER BY e.event_date ASC
+    ", [now()]);
+    }
 
+    $totalBookings = Booking::where('user_id', $user->id)->count();
+    
     return view('dashboard', compact('events'));
     }
+  
 
 }
 

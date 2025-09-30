@@ -1,47 +1,30 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ ('Home Page - Events') }}
+            <h2 class="text-xl">
+                Search Results
             </h2>
-            @auth
-                @if(auth()->user()->isOrganiser())
-                    <a href="{{route('dashboard')}}" 
-                        Create Event
-                    </a>
-                @endif
-            @endauth
+            <a href="{{ route('search.index')}}" class="bg-blue-600 text-white px-4 py-2 rounded">
+                New Search
+            </a>
         </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <!-- Category sections TEST GIT -->
-        <div class="bg-blue-50 border border-gray-200 rounded-lg mb-8 shadow-sm">
-            <div class="px-6 py-6">
-                <!-- Your title and description here -->
-                <div>
-                    <h3> Browse Events by Category </h3>
-                    
-                <div class="flex flex-wrap gap-3">
-                    <!-- All Events button -->
-                    <a href="{{ route('home') }}" class="{{ !$selectedCategory ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
-                        All Events
-                    </a>
-    
-                    <!-- Category buttons loop -->
-                    @foreach($categories as $category)
-                        <a href="{{ route('home', ['category'=> $category->id]) }}" class="{{ $selectedCategory == $category->id ? 'bg-blue-600 text-white': 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
-                </div>
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <!-- Search Summary -->
+            <div class="bg-white border p-4 mb-6">
+                <p> Found {{ $events->count() }}
+                @if(request('query'))
+                    matching " {{request('query')}}"
+                @endif
+                </p>
             </div>
-        </div>     
 
-        <!-- Events grid -->
+    <!-- Used code from homepage -->
     @if($events->count() > 0)
-        <!-- Your events grid here -->
+        
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
             <!-- Your foreach loop for events here -->
             @foreach($events as $event)
@@ -62,6 +45,7 @@
 
                         <!-- Event info with labels -->
                         <div class="mt-3 text-sm text-gray-600 space-y-1">
+                            <!-- Use Carbon to retrieve the event details -->
                             <p><strong>Date:</strong> {{ \Carbon\Carbon::parse($event->event_date)->format('M d, Y') }}</p>
                             <p><strong>Time:</strong> {{ \Carbon\Carbon::parse($event->event_time)->format('g:i A') }}</p>
                             <p><strong>Location:</strong> {{ $event->location }}</p>
@@ -88,19 +72,12 @@
 
     @else
         <div class="text-center py-12">
-            <h3> No Upcoming Events </h3>
+            <h3> No Events Found </h3>
             <p> Check back later for new events </p>
         </div>
-
-        <!-- Your 'no events found' message -->
-        <p> No events were found for that criteria, please try another </p>
-
     @endif
-
+                
+        </div>
     </div>
-</div>
-
-
 
 </x-app-layout>
-

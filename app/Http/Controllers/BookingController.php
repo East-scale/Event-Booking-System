@@ -25,22 +25,20 @@ class BookingController extends Controller
         // 3. Check if the user has already booked this event 
         $existingBooking = Booking::where('user_id', auth()->id())->where('event_id',$event->id)->first();
 
+        // If the booking already exists, go back with an error message
         if ($existingBooking) {
             return redirect()->back()->with('error', 'You have already booked this event.');
         }
-
         // 4. Create the booking
         Booking::create([
             'user_id' => auth() ->id(), //access id property of authenticated user
             'event_id' => $event->id
         ]);
-
         return redirect()->back()->with('success', 'Event booked');
     }
         // Cancel a booking
         public function destroy(Booking $booking)
         {
-        
             // Ensure a user can't cancel other user's bookings
                 if ($booking->user_id !== auth()->id()) {
                     return redirect()->back()->with('error', 'You can only cancel your own bookings.');
