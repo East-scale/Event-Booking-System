@@ -13,14 +13,14 @@ class Event extends Model
     use HasFactory;
 
     //Define the attributes of events that are mass assignable
-    protected $fillable = [ 'title', 'description', 'event_date', 'location', 'capacity', 'organiser_id', ];
+    protected $fillable = [ 'title', 'description', 'event_date', 'event_time','location', 'capacity', 'organiser_id', ];
 
     // Define how these attributes that should be cast when retrieved or set (datetime)
     protected function casts(): array
     {
         return [
             'event_date' => 'datetime',
-            'event_time' => 'datetime'        
+            'event_time' => 'string',        
         ];
     }
  

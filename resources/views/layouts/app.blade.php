@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -14,11 +15,12 @@
     <!-- ADD THIS LINE FOR ALPINE.JS -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- Scripts - FIXED FOR PROXY -->
+    <!-- Scripts - FIXED FOR PROXY 
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <script src="{{ asset('js/app.js') }}" defer></script>
-    <!-- Fallback Tailwind CSS from CDN if local assets fail -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ asset('js/app.js') }}" defer></script> -->
+    
+    <!-- Fallback Tailwind CSS from CDN if local assets fail
+    <script src="https://cdn.tailwindcss.com"></script>-->
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">

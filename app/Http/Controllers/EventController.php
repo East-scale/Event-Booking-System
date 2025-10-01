@@ -185,7 +185,10 @@ class EventController extends Controller
     // Middleware handles the authentication check
     $user = Auth::user();
 
-        if ($user->user_type === 'organiser') {
+     // Redirect attendees away from dashboard
+    if ($user->user_type !== 'organiser') {
+        return redirect()->route('home')->with('error', 'Only organisers can access the dashboard.');
+    }
     // Raw SQL query for the organiser dashboar using DB::select() with parameter binding, 
     // LEFT JOIN is to ensure that events with zero bookings are also included 
     // Separate logic for organisers and attendees
@@ -203,27 +206,11 @@ class EventController extends Controller
         GROUP BY e.id, e.title, e.event_date, e.capacity
         ORDER BY e.event_date ASC
     ", [$user->id]);
-    } else {
-        // Attendees see upcoming events
-        $events = DB::select("
-        SELECT
-            e.id,
-            e.title,
-            e.event_date,
-            e.capacity,
-            COALESCE(COUNT(b.id), 0) as current_bookings,
-            (e.capacity - COALESCE(COUNT(b.id), 0)) as remaining_spots
-        FROM events e
-        LEFT JOIN bookings b ON e.id = b.event_id
-        WHERE e.event_date >= ?
-        GROUP BY e.id, e.title, e.event_date, e.capacity
-        ORDER BY e.event_date ASC
-    ", [now()]);
-    }
+    
 
     $totalBookings = Booking::where('user_id', $user->id)->count();
     
-    return view('dashboard', compact('events'));
+    return view('dashboard', compact('events', 'totalBookings'));
     }
   
 

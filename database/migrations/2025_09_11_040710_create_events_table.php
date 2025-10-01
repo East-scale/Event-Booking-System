@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('title', 100);
             $table->text('description')->nullable(); // can be empt
             $table->dateTime('event_date');
+            $table->time('event_time'); //Add this line
             $table->string('location', 255);
             $table->integer('capacity');
             // foreignID means foreign key, constrained links to users table, and 

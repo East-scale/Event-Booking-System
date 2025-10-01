@@ -37,7 +37,8 @@
                                 <div class="bg-white border p-4 mb-4">
                                     <h4>{{ $booking->title }}</h4>
                                     
-                                    <p>Date: {{ \Carbon\Carbon::parse($booking->date)->format('M d, Y g:i A') }}</p>
+                                    <p>Date: {{ \Carbon\Carbon::parse($booking->event_date)->format('M d, Y') }}</p>
+                                    <p>Location: {{ $booking->location }}</p>
                                     <p>Organiser: {{ $booking->organiser_name }}</p>
                                     <p>Capacity: {{ $booking->capacity }} people</p>
                                     

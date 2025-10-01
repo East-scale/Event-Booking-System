@@ -18,19 +18,20 @@ class RegistrationTest extends TestCase
     // premade
     public function test_new_users_can_register(): void
     {
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
+    $response = $this->post('/register', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'privacy_policy' => true, 
+    ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('home', absolute: false));
     }
 
     // Tests the registration requires a privacy policy
-    public function test_registration_requires_privacy_policy(): void
+    public function  test_user_cannot_register_without_agreeing_to_privacy_policy(): void
     {
     $response = $this->post('/register', [
         'name' => 'Test User',
@@ -56,7 +57,7 @@ class RegistrationTest extends TestCase
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect(route('home'));
     }
 
 

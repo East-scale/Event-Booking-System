@@ -19,7 +19,7 @@ class BookingController extends Controller
         }
         // 2. Check if the event has already occurred
         if (!$event->isUpcoming()){
-            return redirect()->back()->with('error', 'Event is full.');
+            return redirect()->back()->with('error', 'This event has passed.');
         }
 
         // 3. Check if the user has already booked this event 
@@ -65,6 +65,7 @@ class BookingController extends Controller
                     e.title,
                     e.description,
                     e.event_date,
+                    e.location,
                     e.capacity,
                     u.name as organiser_name
                 FROM bookings b

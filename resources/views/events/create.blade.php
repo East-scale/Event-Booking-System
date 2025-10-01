@@ -23,8 +23,8 @@
                     @csrf                   
                     <!-- Form fields are within here -->
                     <!--Event Title -->
-                    div class="mb-4">
-                        <label for="title">Event Title *</label>
+                    <div class="mb-4">
+                        <label for="title">Event Title</label>
                         <input type="text" id="title" name="title" value="{{ old('title') }}" maxlength="100"
                         class="w-full px-3 py-2 border rounded" required>
                     </div>

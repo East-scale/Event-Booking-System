@@ -21,7 +21,7 @@
                 
                 <form action="{{ route('events.update', $event )}}" method="POST">
                     @csrf
-                    @method('PUT')                   
+                    @method('PATCH')                   
                     <!-- Form fields are within here -->
                     <!--Event Title -->
                     <div class="mb-4">

@@ -73,6 +73,7 @@
                     </tbody>
                 </table>
             </div>
+        @else
             @if(auth()->user()->user_type ==='organiser')
             <div class="text-center py-8">
                 <p class="text-gray-600 mb-4">No events created yet</p>
@@ -84,7 +85,8 @@
                 <div class="text-center py-8">
                     <p class="text-gray-600 mb-4">No upcoming events available</p>
                 </div>
-            @endif                        
+            @endif
+        @endif                        
                 </div>
             </div>    
         </div>

@@ -21,17 +21,21 @@
             <div class="px-6 py-6">
                 <!-- Your title and description here -->
                 <div>
-                    <h3> Browse Events by Category </h3>
+                    <h2 class="text-xl font-bold mb-4"> Browse Events by Category </h3>
                     
                 <div class="flex flex-wrap gap-3">
                     <!-- All Events button -->
-                    <a href="{{ route('home') }}" class="{{ !$selectedCategory ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
-                        All Events
+                    <a href="{{ route('home') }}" 
+                    data-category-id="" 
+                    class="category-filter-btn {{ !$selectedCategory ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
+                        All Event Categories
                     </a>
-    
+
                     <!-- Category buttons loop -->
                     @foreach($categories as $category)
-                        <a href="{{ route('home', ['category'=> $category->id]) }}" class="{{ $selectedCategory == $category->id ? 'bg-blue-600 text-white': 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
+                        <a href="{{ route('home', ['category'=> $category->id]) }}" 
+                        data-category-id="{{ $category->id }}"
+                        class="category-filter-btn px-4 py-2 rounded-lg {{ $selectedCategory && $selectedCategory->id == $category->id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50' }} px-3 py-1 rounded-full text-sm">
                             {{ $category->name }}
                         </a>
                     @endforeach
@@ -40,6 +44,7 @@
         </div>     
 
         <!-- Events grid -->
+    <div id="events-container">
     @if($events->count() > 0)
         <!-- Your events grid here -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
@@ -96,6 +101,7 @@
         <p> No events were found for that criteria, please try another </p>
 
     @endif
+    </div>
 
     </div>
 </div>

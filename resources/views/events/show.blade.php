@@ -36,6 +36,17 @@
                         @endif
                     </p>
                     <p><strong>Organiser:</strong> {{ $event->user->name }}</p>
+
+                    <!-- Categories display on Event -->
+                    @if($event->categories->count()> 0)
+                        <p><strong>Categories:</strong> 
+                            @foreach($event->categories as $category)
+                                <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm mr-2">
+                                    {{ $category->name }}
+                                </span>
+                            @endforeach
+                        </p>
+                    @endif
                 </div>
                 <!-- Description-->
                 @if($event->description)
